@@ -20,24 +20,9 @@ library(foreign)
 library(dplyr)
 library(broom)
 library(ggplot2)
-
+library(xtable)
+library(stargazer)
 data <- read.dta("nonimp.dta")
-```
-
-# Clean data and rename variables ???????
-
-```{r}
-
-```
-
-# Plot Data
-
-```{r}
-ggplot(data, aes(x=zsur, y=rexvote, color=country)) + geom_point() + geom_smooth(method=lm, se=FALSE) # Relationship with standardized unemployment rate
-
-ggplot(data, aes(x=zasylumseekers, y=rexvote, color=country)) + geom_point() + geom_smooth(method=lm, se=FALSE) #Relationship w immigration
-
-ggplot(data, aes(x=zreplacementrate, y=rexvote, color=country)) + geom_point() + geom_smooth(method=lm, se=FALSE) #Relationship w welfare (=unemp benefit)
 ```
 
 
@@ -63,7 +48,17 @@ data <- data %>%
   mutate(country = factor(sortcountry, labels=c("AT", "BE","DE-E","DE-W","DK","ES","FI","FR","GR","IT","LU","NL","NO","PT","SE")))
 ```
 
-# Run the regression (multilevel logictic regresstion based on Quasi-penalized likelihood): All contextual variables are mean-centered (as z- connotes)
+# Plot Data 
+
+```{r}
+ggplot(data, aes(x=zsur, y=rexvote)) + geom_point() + geom_smooth(method = "glm", family = "binomial", se=FALSE) # Relationship w/ standardized unemployment rate
+
+ggplot(data, aes(x=zasylumseekers, y=rexvote, color=country)) + geom_point() + geom_smooth(method= "glm", family = "binomial", se=FALSE) # Relationship w/ immigration
+
+ggplot(data, aes(x=zreplacementrate, y=rexvote, color=country)) + geom_point() + geom_smooth(method=lm, se=FALSE) #Relationship w/ welfare (=unemp benefit)
+```
+
+# Run the regression (multilevel logictic regression based on Quasi-penalized likelihood): All contextual variables are mean-centered (as connoted by "z-")
 
 ```{r}
 model1 <- glmmPQL(rexvote ~ male + age1 + age2 + age4 + mye1 + mye2 + farmerown + worker + retired + unemployed + zlrs + euschlecht + zsatisdmo + disp + lfed1 + zasylumseekers + zsur + zasylumseekers:zsur + zreplacementrate + zreplacementrate:zsur + zreplacementrate:zasylumseekers + rmax + salienzmean.c + rvar.c + rvar.c:salienzmean.c + country - 1, random=~1|kontext, family=binomial(link="logit"), data=data, verbose=TRUE)
@@ -71,7 +66,7 @@ summary(model1)
 
 ```
 
-# Visualize regression outputs???????
+# Visualize regression outputs??????? 
 
 ```{r}
 library(car)
@@ -84,19 +79,27 @@ library(car)
 
 ```{r}
 # Create vectors of coefficients, standard deviations, and variable names
-coef_vec <- as.vector(model1$coef$fixed) 
-N <- c(174452, 267)
 
-sd_vec <- as.vector(sqrt(diag(model1$varFix))) #Vector of sds
+Coefficient <- as.vector(model1$coef$fixed) 
+n <- c(174452, 267)
+
+Standard_Deviation <- as.vector(sqrt(diag(model1$varFix))) 
+
 var_names <- c("Male","18–29 years","30–45 years",">65 years","Education: middle/high","Education: university","Petty Bourgeoisie","Worker","Pensioner","Unemployed","Left-Right","Dissatisfied: EU","Dissatisfied: Democracy","Disproportionality","Decentralization","Asylumseekers", "Unemployment", "Asylumseekers × Unemployment", "Toughness", "Salience", "Variance", "AT", "BE", "DE-E", "DE-W", "DK", "ES", "FI", "FR", "GR", "IT", "NL", "NO", "PT", "SE", "Asylumseekers x Unemployment", "Unemployment benefits x Unemployment", "Unemployment benefits x Asylumseekers", "Variance x Salience")
 
 # Create matrix of coefficients and standard deviations.
 
-table_matrix <- cbind(coef_vec, sd_vec)
+table_matrix <- cbind(Coefficient, Standard_Deviation)
 
 ##Label matrix.
 
-rownames(table_matrix) <- c("Male","18–29 years","30–45 years",">65 years","Education: middle/high","Education: university","Petty Bourgeoisie","Worker","Pensioner","Unemployed","Left-Right","Dissatisfied: EU","Dissatisfied: Democracy","Disproportionality","Decentralization","Asylumseekers", "Unemployment", "Asylumseekers × Unemployment", "Toughness", "Salience", "Variance", "AT", "BE", "DE-E", "DE-W", "DK", "ES", "FI", "FR", "GR", "IT", "NL", "NO", "PT", "SE", "Asylumseekers x Unemployment", "Unemployment benefits x Unemployment", "Unemployment benefits x Asylumseekers", "Variance x Salience")
-  
-x <- xtable(table_matrix, digits = 3)
+rownames(table_matrix) <- c("Male","18_29 years","30_45 years",">65 years","Education: middle/high","Education: university","Petty Bourgeoisie","Worker","Pensioner","Unemployed","Left-Right","Dissatisfied: EU","Dissatisfied: Democracy","Disproportionality","Decentralization","Asylumseekers", "Unemployment", "Asylumseekers x Unemployment", "Toughness", "Salience", "Variance", "AT", "BE", "DE-E", "DE-W", "DK", "ES", "FI", "FR", "GR", "IT", "NL", "NO", "PT", "SE", "Asylumseekers x Unemployment", "Unemployment benefits x Unemployment", "Unemployment benefits x Asylumseekers", "Variance x Salience")
+
+# Create table using xtable
+
+x <- xtable(table_matrix, digits = 3, caption = "Logistic multilevel model. PQL2 estimates, model-based standard errors in parentheses. MI results based on 11 separate imputations.")
 print.xtable(x, type = "html", file="tablepractice.html")
+
+# Create Table 1 using stargaze
+
+stargazer(table_matrix, title = "TABLE 1 Support for the Extreme Right: Sociodemographics, Attitudes, Country Effects, and Contextual Variables", align = TRUE, table.layout = "t", notes = "Logistic multilevel model. PQL2 estimates and model-based standard errors.", style = "ajps", out = "Table 1.html", no.space = TRUE)
