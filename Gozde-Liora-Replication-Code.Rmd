@@ -66,6 +66,15 @@ summary(model1)
 
 ```
 
+
+# Model 2 based on glm logit
+
+```{r}
+model2 <- glm(rexvote ~ male + age1 + age2 + age4 + mye1 + mye2 + farmerown + worker + retired + unemployed + zlrs + euschlecht + zsatisdmo + disp + lfed1 + zasylumseekers + zsur + zasylumseekers:zsur + zreplacementrate + zreplacementrate:zsur + zreplacementrate:zasylumseekers + rmax + salienzmean.c + rvar.c + rvar.c:salienzmean.c + country - 1, family=binomial(link="logit"), data=data, verbose=TRUE)
+summary(model2)
+
+
+
 # Visualize regression outputs??????? 
 
 ```{r}
@@ -103,3 +112,31 @@ print.xtable(x, type = "html", file="tablepractice.html")
 # Create Table 1 using stargaze
 
 stargazer(table_matrix, title = "TABLE 1 Support for the Extreme Right: Sociodemographics, Attitudes, Country Effects, and Contextual Variables", align = TRUE, table.layout = "t", notes = "Logistic multilevel model. PQL2 estimates and model-based standard errors.", style = "ajps", out = "Table 1.html", no.space = TRUE)
+
+```
+
+# Figure 1 (Conditonal Effects of Unemployment and Immigration)
+
+```{r}
+library(msm)
+asy <- seq(from = -.98, to=4.46, by=.01) # vector with possible values for asylumseekers
+slopes <- model1$coef$fixed[17] + model1$coef$fixed[36] * asy # Estimated slopes based on estimated coefficients of unemployment (17) and unemployment x immigration (36)
+estmean <- model1$coef$fixed # Estimated means for each variable 
+var <- vcov(model1)
+se <- rep(NA, length(asy))
+
+for (i in 1:length(asy)) {
+  j <- asy[i]
+  se[i] <- deltamethod (~ (x17) + (x36)*j, estmean, var)
+}
+
+upper <- slopes + 1.96*se
+lower <- slopes - 1.96*se
+asy.data <- cbind(asy, slopes, upper, lower)
+plot(asy, slopes, type = "l", lty = 1, ylim=c(-.2, .2), xlim=c(-2, 4), ylab= "Effect: Unemployment", xlab = "Asylumseekers", main = "The Conditional Effects of Unemployment and Immigration")
+points(asy, upper, type = "l", lty = 2)
+points(asy, lower, type = "l", lty = 2)
+points(asy, rep(0, length(asy)), type = "l", col = "black")
+```
+
+
