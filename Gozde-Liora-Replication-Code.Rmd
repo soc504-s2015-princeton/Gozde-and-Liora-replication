@@ -129,14 +129,31 @@ for (i in 1:length(asy)) {
   j <- asy[i]
   se[i] <- deltamethod (~ (x17) + (x36)*j, estmean, var)
 }
-
+# Create confidence intervals and combine all values in matrix.
 upper <- slopes + 1.96*se
 lower <- slopes - 1.96*se
 asy.data <- cbind(asy, slopes, upper, lower)
+
+
+# Creating the first graph in base R 
+
 plot(asy, slopes, type = "l", lty = 1, ylim=c(-.2, .2), xlim=c(-2, 4), ylab= "Effect: Unemployment", xlab = "Asylumseekers", main = "The Conditional Effects of Unemployment and Immigration")
 points(asy, upper, type = "l", lty = 2)
 points(asy, lower, type = "l", lty = 2)
 points(asy, rep(0, length(asy)), type = "l", col = "black")
+
+# Creating the same graph with ggplot - much better looking.
+
+asy.data <- data.frame(asy.data) # Turn matrix into data frame so that ggplot can read it.
+xtitle <- "Asylumseekers"
+ytitle <- "Effect: Unemployment"
+main <- "The Conditional Effects of Unemployment and Immigration"
+ggplot(asy.data, aes(x=asy, y=slopes)) + 
+  geom_line(aes(y=slopes), color="blue") + 
+  geom_ribbon(aes(ymin=lower, ymax=upper), alpha=0.2) + 
+  geom_hline(yintercept=0, size=0.4, color="black") +
+  labs(x=xtitle, y=ytitle, title=main)
+  
 ```
 
 
