@@ -237,7 +237,7 @@ graph_3 <- ggplot(variable.data, aes(x = variable, y = slopes)) +
   labs(x = xtitle, y = ytitle, title = main) +
   coord_fixed(ratio = 400)
 
-# Second part of Figure 2
+# Second part of Figure 2:
 
 variance <- seq(from = -21.71426, to = 174.34497, by=10) # vector with possible values for variance
 variable <- variance

@@ -60,7 +60,7 @@ if (window.hljs && document.readyState && document.readyState === "complete") {
 
 <div id="replication-code-for-contextual-factors-and-the-extreme-right-vote-in-europe-1980-2002-by-kai-arzheimer-american-journal-of-political-science-2009" class="section level1">
 <h1>Replication Code for “Contextual Factors and the Extreme Right Vote in Europe, 1980-2002” by Kai Arzheimer American Journal of Political Science (2009)</h1>
-<p>Note: Please refer to saved files in our repository for images from the article. Also please refer to the table and figures (Table 1, Figure 1, 2) in the repository. Image scales are rearranged in saved versions. Our regression values are slightly different from the authors as his stata code used a slightly different method than our function (glmmPQL) to calculate Penalized Quasi-likehood. Finally, we were not able to reproduce the last two figures that showed the joint impact of more than 2 variables.</p>
+<p>Note: Please refer to saved files in our repository for images from the article. Also please refer to the table and figures (Table 1, Figure 1, 2) in the repository. Image scales are rearranged in saved versions. Our regression values are slightly different from the authors as his stata code used a slightly different method than our function (glmmPQL) to calculate Penalized Quasi-likehood. Finally, we were not able to reproduce the last two figures that showed the joint impact of more than 2 variables; we’ll keep working on these.</p>
 </div>
 <div id="the-paper" class="section level1">
 <h1>The paper</h1>
@@ -177,7 +177,7 @@ rownames(table_matrix) &lt;- c(&quot;Male&quot;,&quot;18_29 years&quot;,&quot;30
 table_1 &lt;- stargazer(table_matrix, title = &quot;TABLE 1 Support for the Extreme Right: Sociodemographics, Attitudes, Country Effects, and Contextual Variables&quot;, align = TRUE, table.layout = &quot;t&quot;, notes = &quot;Logistic multilevel model. PQL2 estimates and model-based standard errors.&quot;, style = &quot;ajps&quot;, out = &quot;Table 1.html&quot;, no.space = TRUE)</code></pre>
 <pre><code>## 
 ## % Table created by stargazer v.5.1 by Marek Hlavac, Harvard University. E-mail: hlavac at fas.harvard.edu
-## % Date and time: Mon, Mar 16, 2015 - 12:34:13 AM
+## % Date and time: Mon, Mar 16, 2015 - 12:47:21 AM
 ## % Requires LaTeX packages: dcolumn 
 ## \begin{table}[!htbp] \centering 
 ##   \caption{TABLE 1 Support for the Extreme Right: Sociodemographics, Attitudes, Country Effects, and Contextual Variables} 
@@ -357,7 +357,7 @@ graph_3 &lt;- ggplot(variable.data, aes(x = variable, y = slopes)) +
   labs(x = xtitle, y = ytitle, title = main) +
   coord_fixed(ratio = 400)
 
-# Second part of Figure 2
+# Second part of Figure 2:
 
 variance &lt;- seq(from = -21.71426, to = 174.34497, by=10) # vector with possible values for variance
 variable &lt;- variance
