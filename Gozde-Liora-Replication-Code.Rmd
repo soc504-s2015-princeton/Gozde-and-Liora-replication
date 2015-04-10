@@ -113,7 +113,7 @@ table_1 <- stargazer(table_matrix, title = "TABLE 1 Support for the Extreme Righ
 ```{r}
 library(msm)
 asy <- seq(from = -.98, to = 4.46, by = .01) # vector with possible values for asylumseekers
-variable <- asy # to standardize the code
+variable <- asy # identifying "asy" as the variable of interest so that the remaining code can be reused in the next graph with a different variable of interest specified
 slopes <- model$coef$fixed[17] + model$coef$fixed[36] * asy # Estimated slopes based on estimated coefficients of unemployment (17) and unemployment x immigration (36)
 estmean <- model$coef$fixed # Estimated means for each variable 
 var <- vcov(model) # Estimated variances
@@ -128,14 +128,7 @@ upper <- slopes + 1.96 * se
 lower <- slopes - 1.96 * se
 variable.data <- cbind(variable, slopes, upper, lower)
 
-# Creating the first graph in base R 
-par(mfrow = c(2, 1))
-plot(variable, slopes, type = "l", lty = 1, ylim = c(-.2, .2), xlim = c(-2, 4), ylab = "Effect: Unemployment", xlab = "Asylumseekers", main = "The Conditional Effects of Unemployment and Immigration")
-points(variable, upper, type = "l", lty = 2)
-points(variable, lower, type = "l", lty = 2)
-points(variable, rep(0, length(variable)), type = "l", col = "black")
-
-# Creating the same graph with ggplot - much better looking.
+# Creating the first graph with ggplot
 
 variable.data <- data.frame(variable.data) # Turn matrix into data frame so that ggplot can read it.
 xtitle <- "Asylumseekers"
@@ -166,14 +159,7 @@ upper <- slopes + 1.96 * se
 lower <- slopes - 1.96 * se
 variable.data <- cbind(variable, slopes, upper, lower)
 
-# Creating second part of the figure in base R 
-
-plot(variable, slopes, type = "l", lty = 1, ylim=c(-.4, .6), xlim=c(-5, 15), ylab= "Effect: Asylum seekers", xlab = "Unemployment", main = "The Conditional Effects of Unemployment and Immigration")
-points(variable, upper, type = "l", lty = 2)
-points(variable, lower, type = "l", lty = 2)
-points(variable, rep(0, length(variable)), type = "l", col = "black")
-
-# Creating the same graph with ggplot:
+# Creating the second graph with ggplot:
 
 variable.data <- data.frame(variable.data) # Turn matrix into data frame so that ggplot can read it.
 xtitle <- "Unemployment"
@@ -216,15 +202,7 @@ upper <- slopes + 1.96*se
 lower <- slopes - 1.96*se
 variable.data <- cbind(variable, slopes, upper, lower)
 
-
-# Creating the first graph in base R 
-
-plot(variable, slopes, type = "l", lty = 1, ylim=c(-.02, .03), xlim=c(-5, 20), ylab= "Effect: Variance", xlab = "Salience", main = "The Conditional Effects of Salience and Variance")
-points(variable, upper, type = "l", lty = 2)
-points(variable, lower, type = "l", lty = 2)
-points(variable, rep(0, length(variable)), type = "l", col = "black")
-
-# Creating the same graph with ggplot:
+# Creating the first graph with ggplot:
 
 variable.data <- data.frame(variable.data) # Turn matrix into data frame so that ggplot can read it.
 xtitle <- "Salience"
@@ -252,14 +230,7 @@ upper <- slopes + 1.96 * se
 lower <- slopes - 1.96 * se
 variable.data <- cbind(variable, slopes, upper, lower)
 
-# Creating the second graph in base R 
-par(mfrow = c(1,1))
-plot(variable, slopes, type = "l", lty = 1, ylim = c(-.05, .2), xlim = c(-50, 150), ylab = "Effect: Saliance", xlab = "Variance")
-points(variable, upper, type = "l", lty = 2)
-points(variable, lower, type = "l", lty = 2)
-points(variable, rep(0, length(variable)), type = "l", col = "black")
-
-# Creating the same graph with ggplot:
+# Creating the second graph with ggplot:
 
 variable.data <- data.frame(variable.data) # Turn matrix into data frame so that ggplot can read it.
 xtitle <- "Variance"
