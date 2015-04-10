@@ -86,7 +86,7 @@ model <- glmmPQL(ext_vote ~ male + age_1 + age_2 + age_4 + edu_1 + edu_2 + farme
 
 
 # Table 1
-
+![Table 1](figures/table1.png)
 ```{r}
 # Create vectors of coefficients, standard deviations, and variable names
 
@@ -109,7 +109,7 @@ table_1 <- stargazer(table_matrix, title = "TABLE 1 Support for the Extreme Righ
 ```
 
 # Figure 1 (Conditonal Effects of Unemployment and Immigration)
-
+![Figure 1](figures/fig1.png)
 ```{r}
 library(msm)
 asy <- seq(from = -.98, to = 4.46, by = .01) # vector with possible values for asylumseekers
@@ -197,7 +197,7 @@ graph_2
 ```
 
 # Figure 2 (Conditonal Effects of Salience and Variance)
-
+![Figure 2](figures/fig2.png)
 ```{r}
 # Graph 1
 salience <- seq(from = -3.108026, to = 21.872906, by=.1) # vector with possible values for salience
