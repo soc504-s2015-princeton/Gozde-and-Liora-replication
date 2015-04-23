@@ -1,0 +1,278 @@
+---
+---
+title: "Gozde and Liora Replication Code"
+author: "Gozde Guran and Liora Goldensher"
+date: "3/6/2015"
+output: html_document
+---
+
+# Replication Code for "Contextual Factors and the Extreme Right Vote in Europe, 1980-2002" by Kai Arzheimer American Journal of Political Science (2009)
+
+Note: Please refer to saved files in our repository for images from the article. Also please refer to the table and figures (Table 1, Figure 1, 2) in the repository. Image scales are rearranged in saved versions. Our regression values are slightly different from the authors as his stata code used a slightly different method than our function (glmmPQL) to calculate Penalized Quasi-likehood. Finally, we were not able to reproduce the last two figures that showed the joint impact of more than 2 variables; we'll keep working on these.
+
+#The paper
+Kai Arzheimer, "Contextual Factors and the Extreme Right Vote in Western Europe, 1980-2002"25548117.pdf
+This article attempts to answer the “twin question of why the extreme right support is so unstable within many countries over time, and why these parties are so weak in many West European countries.” Authors conduct a multi-level analysis, combining data on macro-level contextual variables (unemployment, immigration, and welfare benefits) with individual-level variables (sociodemographic factors and attitudes). 
+
+#The data
+Individual-level variables come from Eurobarometer surveys (1980-2002), while contextual variables are gathered from a number of different data sets produced by the OECD, UNHCR etc. The merged data and the Stata code are available through the author’s dataverse at: http://hdl.handle.net/1902.1/12092. 
+
+#The model 
+The article uses a logistic multi-level model via Penalized Quasi-Likelihood. The dependent variable is vote intention for an extreme right party, which is assumed to be binomially distributed.
+
+# Run necessary packages and load data (Source: Arzheimer dataverse)
+
+```{r}
+
+
+library(MASS)
+library(nlme)
+library(xtable)
+library(foreign)
+library(dplyr)
+library(broom)
+library(ggplot2)
+library(xtable)
+library(stargazer)
+library(grid)
+library(gridExtra)
+
+data <- read.dta("nonimp.dta")
+
+# Cleaning up data
+data <- rename(data, ext_vote = rexvote)
+data <- rename(data, age_1 = age1) # (18–29 years)
+data <- rename(data, age_2 = age2) # (30–45 years)
+data <- rename(data, age_4 = age4) # (>65 years)
+data <- rename(data, edu_1 = mye1) # Education: middle/high
+data <- rename(data, edu_2 = mye2) # Education: university
+data <- rename(data, farmer_own = farmerown) 
+data <- rename(data, left_right_scale = zlrs) # Left-Right Scale
+data <- rename(data, eu_neg = euschlecht) # Negative evaluation of EU membership of one's own country
+data <- rename(data, z_dem_satis = zsatisdmo) # Dissatisfied: Democracy
+data <- rename(data, dispro_elect = disp) # Disproportionality
+data <- rename(data, federalism = lfed1) # Decentralization
+data <- rename(data, z_asylumseeker = zasylumseekers) 
+data <- rename(data, z_unemp = zsur) # Unemployment rate
+data <- rename(data, z_replacement = zreplacementrate) # Unemp benefits
+data <- rename(data, max_er = rmax) # Maximum toughness in extreme right discourse
+
+```
+
+
+# Preparing data for analysis
+
+```{r}
+# Create centered variables for Saliance and Variance based on grand mean centering according to author
+
+data <- data  %>% 
+  mutate(salience_mean_c = (salienzmean - 3.84568)) %>% 
+  mutate(var_c = rvar - 21.75423)
+
+# Make male variable numeric
+data <- data %>%
+  mutate(male = as.numeric(male))
+
+# Create a dummy variable for country (transform from character to factor variable)
+data <- data %>%
+  mutate(country = factor(sortcountry, labels = c("AT", "BE","DE-E","DE-W","DK","ES","FI","FR","GR","IT","LU","NL","NO","PT","SE")))
+```
+
+# Run the regression (multilevel logictic regression based on Quasi-penalized likelihood): All contextual variables are standardized mean-centered (as connoted by "z-")
+
+```{r}
+model <- glmmPQL(ext_vote ~ male + age_1 + age_2 + age_4 + edu_1 + edu_2 + farmer_own + worker + retired + unemployed + left_right_scale + eu_neg + z_dem_satis + dispro_elect + federalism + z_asylumseeker + z_unemp + z_asylumseeker:z_unemp + z_replacement + z_replacement:z_unemp + z_replacement:z_asylumseeker + max_er + salience_mean_c + var_c + var_c:salience_mean_c + country - 1, random = ~1|kontext, family = binomial(link = "logit"), data = data, verbose = TRUE)
+# summary(model) # Output too long
+```
+
+
+# Table 1
+![Table 1](figures/table1.png)
+```{r}
+# Create vectors of coefficients, standard deviations, and variable names
+
+coefficient <- as.vector(model$coef$fixed) 
+n <- c(174452, 267)
+stand_dev <- as.vector(sqrt(diag(model$varFix))) 
+
+# Create matrix of coefficients and standard deviations.
+
+table_matrix <- cbind(coefficient, stand_dev)
+
+# Label matrix.
+
+rownames(table_matrix) <- c("Male","18_29 years","30_45 years",">65 years","Education: middle/high","Education: university","Petty Bourgeoisie","Worker","Pensioner","Unemployed","Left-Right","Dissatisfied: EU","Dissatisfied: Democracy","Disproportionality","Decentralization","Asylumseekers", "Unemployment", "Asylumseekers x Unemployment", "Toughness", "Salience", "Variance", "AT", "BE", "DE-E", "DE-W", "DK", "ES", "FI", "FR", "GR", "IT", "NL", "NO", "PT", "SE", "Asylumseekers x Unemployment", "Unemployment benefits x Unemployment", "Unemployment benefits x Asylumseekers", "Variance x Salience")
+
+# Create Table 1 with stargaze
+
+table_1 <- stargazer(table_matrix, title = "TABLE 1 Support for the Extreme Right: Sociodemographics, Attitudes, Country Effects, and Contextual Variables", align = TRUE, table.layout = "t", notes = "Logistic multilevel model. PQL2 estimates and model-based standard errors.", style = "ajps", out = "Table 1.html", no.space = TRUE)
+
+```
+
+# Figure 1 (Conditonal Effects of Unemployment and Immigration)
+![Figure 1](figures/fig1.png)
+```{r}
+library(msm)
+asy <- seq(from = min(data$z_asylumseeker), to = max(data$z_asylumseeker), by = .01)) # vector with possible values for asylumseekers
+
+variable <- asy # identifying "asy" as the variable of interest so that the remaining code can be reused in the next graph with a different variable of interest specified
+slopes <- model$coef$fixed["z_unemp"] + model$coef$fixed["z_asylumseeker:z_unemp"] * asy # Estimated slopes based on estimated coefficients of unemployment (17) and unemployment x immigration (36)
+estmean <- model$coef$fixed # Estimated means for each variable 
+estvar <- vcov(model) # Estimated covariances
+se <- rep(NA, length(variable)) # Creating empty vector for predicted s.e. values
+# Creating a loop using the deltamethod function which approximates standard errors of transformation of parameters based on the given estimates of the mean and covariance (~ bootstrapping).
+for (i in 1:length(variable)) {
+  j <- variable[i]
+  se[i] <- deltamethod (~ (x17) + (x36) * j, estmean, estvar)
+}
+
+# Create confidence intervals and combine all values in matrix.
+upper <- slopes + 1.96 * se
+lower <- slopes - 1.96 * se
+variable.data <- cbind(variable, slopes, upper, lower)
+
+# Creating the first graph with ggplot
+
+variable.data <- data.frame(variable.data) # Turn matrix into data frame so that ggplot can read it.
+xtitle <- "Asylumseekers"
+ytitle <- "Effect: Unemployment"
+main <- "Figure 1: The Conditional Effects of Unemployment and Immigration"
+graph_1 <- ggplot(variable.data, aes(x = variable, y = slopes)) + 
+  geom_line(aes(y = slopes), color = "blue") + 
+  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2) + 
+  geom_hline(yintercept = 0, size = 0.4, color = "black") +
+  labs(x = xtitle, y = ytitle, title = main) +
+  coord_fixed(ratio = 8)
+
+#Figure 1, graph 2
+
+unemployment <- seq(from = min(data$z_unemp), to = max(data$z_unemp), by = .01) # vector with possible values for unemployment
+variable <- unemployment # standardized label
+slopes <- model$coef$fixed["z_asylumseeker"] + model$coef$fixed["z_asylumseeker:z_unemp"] * variable # Estimated slopes based on estimated coefficients of asylumseekers (16) and unemployment x immigration (36)
+estmean <- model$coef$fixed # Estimated means for variables 
+estvar <- vcov(model) # Estimated covariances
+se <- rep(NA, length(variable)) # Creating empty vector for predicted s.e. values
+# Creating a loop with deltamethod to calculate estimated standard errors
+for (i in 1:length(variable)) {
+  j <- variable[i]
+  se[i] <- deltamethod (~ (x16) + (x36) * j, estmean, estvar)
+}
+# Create confidence intervals and combine all values in matrix.
+upper <- slopes + 1.96 * se
+lower <- slopes - 1.96 * se
+variable.data <- cbind(variable, slopes, upper, lower)
+
+# Creating the second graph with ggplot:
+
+variable.data <- data.frame(variable.data) # Turn matrix into data frame so that ggplot can read it.
+xtitle <- "Unemployment"
+ytitle <- "Effect: Asylum seekers"
+main <- "The Conditional Effects of Unemployment and Immigration"
+graph_2 <- ggplot(variable.data, aes(x = variable, y = slopes)) + 
+  geom_line(aes(y = slopes), color = "blue") + 
+  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2) + 
+  geom_hline(yintercept = 0, size = 0.4, color = "black") +
+  labs(x = xtitle, y = ytitle) +
+  coord_fixed(ratio = 12)
+
+# Figure 1 with ggplot
+
+grid.arrange(graph_1, graph_2, ncol = 1)
+
+# Plot separately - better scaled
+graph_1
+graph_2
+
+```
+
+# Figure 2 (Conditonal Effects of Salience and Variance)
+![Figure 2](figures/fig2.png)
+```{r}
+# Graph 1
+salience <- seq(from = min(data$salience_mean_c), to = max(data$salience_mean_c), by=.1) # vector with possible values for salience
+variable <- salience
+slopes <- model$coef$fixed["var_c"] + model$coef$fixed["salience_mean_c:var_c"] * variable # Estimated slopes based on estimated coefficients of salience (21) and salience x variance (39)
+estmean <- model$coef$fixed # Estimated means for variables 
+estvar <- vcov(model) # Estimated covariances
+se <- rep(NA, length(variable)) # Creating empty vector for predicted s.e. values
+# Creating a loop with deltamethod to calculate estimated standard errors
+for (i in 1:length(variable)) {
+  j <- variable[i]
+  se[i] <- deltamethod (~ (x21) + (x39)*j, estmean, estvar)
+}
+# Create confidence intervals and combine all values in matrix.
+upper <- slopes + 1.96*se
+lower <- slopes - 1.96*se
+variable.data <- cbind(variable, slopes, upper, lower)
+
+# Creating the first graph with ggplot:
+
+variable.data <- data.frame(variable.data) # Turn matrix into data frame so that ggplot can read it.
+xtitle <- "Salience"
+ytitle <- "Effect: Variance"
+main <- "The Conditional Effects of Salience and Variance"
+graph_3 <- ggplot(variable.data, aes(x = variable, y = slopes)) + 
+  geom_line(aes(y = slopes), color = "blue") + 
+  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2) + 
+  geom_hline(yintercept = 0, size = 0.4, color = "black") +
+  labs(x = xtitle, y = ytitle, title = main) +
+  coord_fixed(ratio = 400)
+
+# Second part of Figure 2:
+
+variance <- seq(from = min(data$var_c), to = max(data$var_c), by=10) # vector with possible values for variance
+variable <- variance
+slopes <- model$coef$fixed["salience_mean_c"] + model$coef$fixed["salience_mean_c:var_c"] * variable # Estimated slopes based on estimated coefficients of salience (20) and salience x variance (39)
+estmean <- model$coef$fixed # Estimated means for variables 
+estvar <- vcov(model) # Estimated covariances
+se <- rep(NA, length(variable)) # Creating empty vector for predicted s.e. values
+# Creating a loop with deltamethod to calculate estimated standard errors
+
+for (i in 1:length(variable)) {
+  j <- variable[i]
+  se[i] <- deltamethod (~ (x20) + (x39) * j, estmean, estvar)
+}
+# Create confidence intervals and combine all values in matrix.
+upper <- slopes + 1.96 * se
+lower <- slopes - 1.96 * se
+variable.data <- cbind(variable, slopes, upper, lower)
+
+# Creating the second graph with ggplot:
+
+variable.data <- data.frame(variable.data) # Turn matrix into data frame so that ggplot can read it.
+xtitle <- "Variance"
+ytitle <- "Effect: Salience"
+main <- "The Conditional Effects of Salience and Variance"
+graph_4 <- ggplot(variable.data, aes(x = variable, y = slopes)) + 
+  geom_line(aes(y = slopes), color = "blue") + 
+  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2) + 
+  geom_hline(yintercept = 0, size = 0.4, color = "black") +
+  labs(x = xtitle, y = ytitle, title = main) +
+  coord_fixed(ratio = 500)
+
+grid.arrange(graph_3, graph_4, ncol = 1)
+# Better scaled versions - not combined
+graph_3
+graph_4
+`
+```
+
+# Model 1: Adorno Thesis (Personality Traits and Value Orientations)
+
+```{r}
+model1 <- glm(ext_vote ~ male + age_1 + age_2 + age_4 + edu_1 + edu_2 + farmer_own + worker + retired + unemployed + partner + left_right_scale + max_er + salience_mean_c + var_c + var_c:salience_mean_c + country - 1)
+
+```
+
+# Model 2: Parsons Thesis (Social Disintegration)
+```{r}
+model2 <- glm(ext_vote ~ eu_neg + z_dem_satis + max_er + salience_mean_c + var_c + var_c:salience_mean_c + country - 1)
+```
+
+# Model 3: Group Conflict Model (Various theories)
+
+```{r}
+model3 <- glm(ext_vote ~ dispro_elect + federalism + z_asylumseeker + z_unemp + z_asylumseeker:z_unemp + z_replacement + z_replacement:z_unemp + z_replacement:z_asylumseeker + max_er + salience_mean_c + var_c + var_c:salience_mean_c + country - 1)
+
+```
+
