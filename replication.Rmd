@@ -272,7 +272,7 @@ model2 <- glm(ext_vote ~ eu_neg + z_dem_satis + max_er + salience_mean_c + var_c
 # Model 3: Group Conflict Model (Various theories)
 
 ```{r}
-model3 <- glm(ext_vote ~ dispro_elect + federalism + z_asylumseeker + z_unemp + z_asylumseeker:z_unemp + z_replacement + z_replacement:z_unemp + z_replacement:z_asylumseeker + max_er + salience_mean_c + var_c + var_c:salience_mean_c + country - 1)
+model3 <- glm(ext_vote ~ dispro_elect + federalism + z_asylumseeker + z_unemp + z_asylumseeker:z_unemp + z_replacement + z_replacement:z_unemp + z_replacement:z_asylumseeker + max_er + salience_mean_c + var_c + var_c:salience_mean_c + country - 1) 
 
 ```
 
