@@ -257,7 +257,11 @@ graph_4
 `
 ```
 
+#Extension
+Our extension was inspired by Andreas Wimmer and Yuval Feinstein's 2010 paper "The Rise of the Nation-State Across the World, 1816-2001."  This paper seperately tests the prevailing explanatory theories of the rise of the nation-state as the dominant form of governance.  Our extension takes a similar approach, testing the major theories of support for extreme right parties in the Western European context in individual models.  We operationalize the variables in these theories using the available measures from the original data set, and each model retains the measures of salience (the prominence of extreme right issues on parties' agendas) and variance (degree of consensus within parties) and their interaction as independant variables.
+
 # Model 1: Adorno Thesis (Personality Traits and Value Orientations)
+The first model is based on Theodor Adorno's 1950 theory that support for extreme right parties (in his case, fascist parties) originates from supporters' personality traits and value orientations, which make individuals more receptive to the appeals of extreme right parties.  We operationalize "personality traits and value orientations" using the individual level characteristics from our data set.
 
 ```{r}
 model1 <- glm(ext_vote ~ male + age_1 + age_2 + age_4 + edu_1 + edu_2 + farmer_own + worker + retired + unemployed + partner + left_right_scale + max_er + salience_mean_c + var_c + var_c:salience_mean_c + country - 1)
@@ -265,11 +269,15 @@ model1 <- glm(ext_vote ~ male + age_1 + age_2 + age_4 + edu_1 + edu_2 + farmer_o
 ```
 
 # Model 2: Parsons Thesis (Social Disintegration)
+Parsons' 1942 theory of social disintegratoin posits that anomia, a breakdown of social norms, and attendant feelings of anxiety, anger and isolation brings about a longing for strong leadership and rigid ideologies that extreme right parties can provide.  While we do not have measures for the emotions of participants in the studies whose data we use, in our second model we examine the relationship between extreme right voting and the kinds of sentiments about social change (satisfaction with democracy, opinions about the European Union) that Parsons refers to.
+
 ```{r}
 model2 <- glm(ext_vote ~ eu_neg + z_dem_satis + max_er + salience_mean_c + var_c + var_c:salience_mean_c + country - 1)
 ```
 
 # Model 3: Group Conflict Model (Various theories)
+Group conflict theories encompass a variety of theories.  Some emphasize the role of instrumental rationality, arguing that xenophobia results from a contest between immigrants and residents over scarce resources like jobs and welfare benefits. Others emphasize the scapegoating of immigrants as perceived threats to residents' status, power or resources.  In this last model, we use relevant variables representing both the availability of resources like jobs and welfare benefits and the prevalence of immigration.
+
 
 ```{r}
 model3 <- glm(ext_vote ~ dispro_elect + federalism + z_asylumseeker + z_unemp + z_asylumseeker:z_unemp + z_replacement + z_replacement:z_unemp + z_replacement:z_asylumseeker + max_er + salience_mean_c + var_c + var_c:salience_mean_c + country - 1) 
