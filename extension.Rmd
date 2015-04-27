@@ -97,15 +97,13 @@ range(pred) # variation in the predicted probabilities: very little variation.
 dev.off()
 # Create separation plot to visualize the predictive power of the model
 plot_model1 <- separationplot(pred = pred, actual = actual, type = "rect", heading = "Model1: The Adorno Thesis", xlab = "ER Vote Intention", newplot = F, line = T, lwd2 = 0.8, height = 0.5, show.expected = T) 
-plot_model1
-```
-
 ```
 
 
 #Conclusion
 There isn't a big range in the predicted probabilities of the model, therefore the predicted probabilities are not very helpful. Separation plot helps a lot to discern the predictive power of the model. As the events of extreme right vote intension increases as we move to the right (i.e. red lines cluster around the end of the graph), the model does a good job of estimating the likelihood of events. However, as the small arrow in the graph shows, the model predicts that half the number of observations will have the intention to vote for an extreme right party. The number of actual events (red lines) is much lower.  
 
+```
 
 # Model 2: Parsons Thesis (Social Disintegration)
 Parsons' 1942 theory of social disintegration posits that anomia, a breakdown of social norms, and attendant feelings of anxiety, anger and isolation brings about a longing for strong leadership and rigid ideologies that extreme right parties can provide.  While we do not have measures for the emotions of participants in the studies whose data we use, in our second model we examine the relationship between extreme right voting and the kinds of sentiments about social change that Parsons refers to: satisfaction with democracy and the negative evaluation of the European Union.
@@ -128,11 +126,12 @@ range(pred) # variation in the predicted probabilities: very little variation.
 dev.off()
 # Create separation plot to visualize the predictive power of the model
 plot_model2 <- separationplot(pred = pred, actual = actual, type = "rect", heading = "Model2: The Parsons Thesis", xlab = "ER Vote Intention", newplot = F, line = T, lwd2 = 0.8, height = 0.5, show.expected = T) 
-plot_model2
 ```
 
 #Conclusion:
 Again, there is little variation in our predictive probabilities with this model. Similar to model 1, most events are aligned with higher predictive probabilities on the right hand of the graph. Yet Model 1 has slightly better predictive power as the very end of the graph is likely to be clustered with event than non-events as in Model 2. 
+
+```
 
 # Model 3: Group Conflict Model (Various theories)
 Group conflict theories encompass a variety of theories.  Some emphasize the role of instrumental rationality, arguing that xenophobia results from a contest between immigrants and residents over scarce resources like jobs and welfare benefits. Others emphasize the scapegoating of immigrants as perceived threats to residents' status, power or resources.  In this last model, we use relevant variables representing both the availability of resources like jobs and welfare benefits and the prevalence of immigration: unemployment rates, unemployment benefits, number of asylum seekers, saliance and variance of right-wing issues.
