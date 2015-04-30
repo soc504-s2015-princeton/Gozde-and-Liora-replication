@@ -15,7 +15,7 @@ Our extension was inspired by Andreas Wimmer and Yuval Feinstein's 2010 paper "T
 
 In order to obtain a compelling visual representation of the predictive power of different theories and models, we use the method suggested in Brian Greenhill, Michael D. Ward and Audrey Sacks (2011) "The Separation Plot: A New Visual Method for Evaluating the Fit of Models with Categorical Outcomes",  American Journal of Political Science 55 (3): 1-13. We use their R package "separationplot".
 
-# Run necessary packages and load data (Source: Arzheimer dataverse)
+Run necessary packages and load data (Source: Arzheimer dataverse)
 
 ```{r}
 
@@ -172,4 +172,4 @@ All Three Models
 
 ![Model 3](figures/SP.model3.png)
 
-Although there is very little difference in the separation plots for all three models, our conclusion is that model 1 (the Adorno thesis which emphasizes individual-level characteristics and personal attitudes) has the most predictive power. 
+Although there is very little difference in the separation plots for all three models, our conclusion is that model 1 (the Adorno thesis which emphasizes individual-level characteristics and personal attitudes) has the most predictive power given the level of concentration of events in the upper probabilities area in the plot. 
