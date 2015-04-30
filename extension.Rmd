@@ -1,6 +1,6 @@
 ---
 title: "Gozde and Liora extension"
-author: "Liora Goldensher"
+author: "Liora and Gozde"
 date: "April 27, 2015"
 output:
   html_document:
@@ -15,7 +15,7 @@ Our extension was inspired by Andreas Wimmer and Yuval Feinstein's 2010 paper "T
 
 In order to obtain a compelling visual representation of the predictive power of different theories and models, we use the method suggested in Brian Greenhill, Michael D. Ward and Audrey Sacks (2011) "The Separation Plot: A New Visual Method for Evaluating the Fit of Models with Categorical Outcomes",  American Journal of Political Science 55 (3): 1-13. We use their R package "separationplot".
 
-# Run necessary packages and load data (Source: Arzheimer dataverse)
+Run necessary packages and load data (Source: Arzheimer dataverse)
 
 ```{r}
 
@@ -80,7 +80,6 @@ The first model is based on Theodor Adorno's 1950 theory that support for extrem
 ```{r}
 library(separationplot)
 library(Hmisc) 
-library(zoom)
 
 model_1 <- glm(ext_vote ~ male + age_1 + age_2 + age_4 + edu_1 + edu_2 + farmer_own + worker + retired + unemployed + partner + left_right_scale + country - 1, data = data)
 summary(model_1)
@@ -96,9 +95,10 @@ pred <- as.vector(pred)
 range(pred) # variation in the predicted probabilities: very little variation.
 dev.off()
 # Create separation plot to visualize the predictive power of the model
-plot_model1 <- separationplot(pred = pred, actual = actual, type = "rect", heading = "Model1: The Adorno Thesis", xlab = "ER Vote Intention", newplot = F, line = T, lwd2 = 0.8, height = 0.5, show.expected = T) 
+separationplot(pred = pred, actual = actual, type = "rect", heading = "Model1: The Adorno Thesis", xlab = "ER Vote Intention", newplot = F, line = T, lwd2 = 0.8, height = 0.5, show.expected = T) 
 ```
 
+![Model 1](figures/SP.Model1.png)
 
 #Conclusion
 There isn't a big range in the predicted probabilities of the model, therefore the predicted probabilities are not very helpful. Separation plot helps a lot to discern the predictive power of the model. As the events of extreme right vote intension increases as we move to the right (i.e. red lines cluster around the end of the graph), the model does a good job of estimating the likelihood of events. However, as the small arrow in the graph shows, the model predicts that half the number of observations will have the intention to vote for an extreme right party. The number of actual events (red lines) is much lower.  
@@ -106,6 +106,7 @@ There isn't a big range in the predicted probabilities of the model, therefore t
 ```
 
 # Model 2: Parsons Thesis (Social Disintegration)
+
 Parsons' 1942 theory of social disintegration posits that anomia, a breakdown of social norms, and attendant feelings of anxiety, anger and isolation brings about a longing for strong leadership and rigid ideologies that extreme right parties can provide.  While we do not have measures for the emotions of participants in the studies whose data we use, in our second model we examine the relationship between extreme right voting and the kinds of sentiments about social change that Parsons refers to: satisfaction with democracy and the negative evaluation of the European Union.
 
 
@@ -125,8 +126,10 @@ pred <- as.vector(pred)
 range(pred) # variation in the predicted probabilities: very little variation.
 dev.off()
 # Create separation plot to visualize the predictive power of the model
-plot_model2 <- separationplot(pred = pred, actual = actual, type = "rect", heading = "Model2: The Parsons Thesis", xlab = "ER Vote Intention", newplot = F, line = T, lwd2 = 0.8, height = 0.5, show.expected = T) 
+separationplot(pred = pred, actual = actual, type = "rect", heading = "Model2: The Parsons Thesis", xlab = "ER Vote Intention", newplot = F, line = T, lwd2 = 0.8, height = 0.5, show.expected = T) 
 ```
+
+![Model 2](figures/SP.model2.png)
 
 #Conclusion:
 Again, there is little variation in our predictive probabilities with this model. Similar to model 1, most events are aligned with higher predictive probabilities on the right hand of the graph. Yet Model 1 has slightly better predictive power as the very end of the graph is likely to be clustered with event than non-events as in Model 2. 
@@ -134,6 +137,7 @@ Again, there is little variation in our predictive probabilities with this model
 ```
 
 # Model 3: Group Conflict Model (Various theories)
+
 Group conflict theories encompass a variety of theories.  Some emphasize the role of instrumental rationality, arguing that xenophobia results from a contest between immigrants and residents over scarce resources like jobs and welfare benefits. Others emphasize the scapegoating of immigrants as perceived threats to residents' status, power or resources.  In this last model, we use relevant variables representing both the availability of resources like jobs and welfare benefits and the prevalence of immigration: unemployment rates, unemployment benefits, number of asylum seekers, saliance and variance of right-wing issues.
 
 ```{r}
@@ -152,12 +156,20 @@ pred <- as.vector(pred)
 range(pred) # variation in the predicted probabilities: very little variation.
 dev.off()
 # Create separation plot to visualize the predictive power of the model
-plot_model3 <- separationplot(pred = pred, actual = actual, type = "rect", heading = "Model3: The Group Conflict Thesis", xlab = "ER Vote Intention", newplot = F, line = T, lwd2 = 0.8, height = 0.5, show.expected = T) 
+separationplot(pred = pred, actual = actual, type = "rect", heading = "Model3: The Group Conflict Thesis", xlab = "ER Vote Intention", newplot = F, line = T, lwd2 = 0.8, height = 0.5, show.expected = T) 
 ```
 
+![Model 3](figures/SP.model3.png)
 
 #Conclusion:
 The majority of events (intention to vote for ER) are clustered at the end right end of the model - which is in line with a good predictive model. However, in this model the distribution of events is very dispersed compared to other two models.
 
+All Three Models
 
-Although there is very little difference in the separation plots for all three models, our conclusion is that model 1 (the Adorno thesis which emphasizes individual-level characteristics and personal attitudes) has the most predictive power. 
+![Model 1](figures/SP.Model1.png)
+
+![Model 2](figures/SP.model2.png)
+
+![Model 3](figures/SP.model3.png)
+
+Although there is very little difference in the separation plots for all three models, our conclusion is that model 1 (the Adorno thesis which emphasizes individual-level characteristics and personal attitudes) has the most predictive power given the level of concentration of events in the upper probabilities area in the plot. 
