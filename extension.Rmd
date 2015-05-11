@@ -1,5 +1,5 @@
 ---
-title: "Gozde and Liora extension"
+title: "Gozde and Liora Extension Project"
 author: "Liora and Gozde"
 date: "April 27, 2015"
 output:
@@ -9,7 +9,6 @@ output:
       "-RTS"
     ]
 ---
-# EXTENSION
 
 Our extension was inspired by Andreas Wimmer and Yuval Feinstein's 2010 paper "The Rise of the Nation-State Across the World, 1816-2001."  This paper seperately tests the prevailing explanatory theories of the rise of the nation-state as the dominant form of governance. Our extension takes a similar approach, testing the major theories of support for extreme right parties in the Western European context in separate models. We operationalize the variables in these theories using the available measures from the original data set.
 
@@ -22,36 +21,36 @@ Run necessary packages and load data (Source: Arzheimer dataverse)
 
 library(MASS)
 library(nlme)
-library(xtable)
 library(foreign)
 library(dplyr)
 library(broom)
 library(ggplot2)
-library(xtable)
 library(stargazer)
 library(grid)
 library(gridExtra)
+library(separationplot)
+library(Hmisc) 
 
 data <- read.dta("nonimp.dta")
 
 # Cleaning up data
-data <- rename(data, ext_vote = rexvote)
-data <- rename(data, age_1 = age1) # (18–29 years)
-data <- rename(data, age_2 = age2) # (30–45 years)
-data <- rename(data, age_4 = age4) # (>65 years)
-data <- rename(data, edu_1 = mye1) # Education: middle/high
-data <- rename(data, edu_2 = mye2) # Education: university
-data <- rename(data, farmer_own = farmerown) 
-data <- rename(data, left_right_scale = zlrs) # Left-Right Scale
-data <- rename(data, eu_neg = euschlecht) # Negative evaluation of EU membership of one's own country
-data <- rename(data, z_dem_satis = zsatisdmo) # Dissatisfied: Democracy
-data <- rename(data, dispro_elect = disp) # Disproportionality
-data <- rename(data, federalism = lfed1) # Decentralization
-data <- rename(data, z_asylumseeker = zasylumseekers) 
-data <- rename(data, z_unemp = zsur) # Unemployment rate
-data <- rename(data, z_replacement = zreplacementrate) # Unemp benefits
-data <- rename(data, max_er = rmax) # Maximum toughness in extreme right discourse
-
+data <- data %>%
+  rename(ext_vote = rexvote,
+         age_1 = age1, # (18–29 years)
+         age_2 = age2, # (30–45 years)
+         age_4 = age4, # (>65 years)
+         edu_1 = mye1, # Education: middle/high
+         edu_2 = mye2, # Education: university
+         farmer_own = farmerown,
+         left_right_scale = zlrs, # Left-Right Scale
+         eu_neg = euschlecht, # Negative evaluation of EU membership of one's own country
+         z_dem_satis = zsatisdmo, # Dissatisfied: Democracy
+         dispro_elect = disp, # Disproportionality
+         federalism = lfed1, # Decentralization
+         z_asylumseeker = zasylumseekers,
+         z_unemp = zsur, # Unemployment rate
+         z_replacement = zreplacementrate, # Unemp benefits
+         max_er = rmax) # Maximum toughness in extreme right discourse
 ```
 
 
@@ -74,28 +73,32 @@ data <- data %>%
 ```
 
 
-# Model 1: Adorno Thesis (Personality Traits and Value Orientations)
+# Model 1: Adorno Thesis (Individual Characteristics and Value Orientations)
 The first model is based on Theodor Adorno's 1950 theory that support for extreme right parties (in his case, fascist parties) originates from supporters' personality traits and value orientations, which make individuals more receptive to the appeals of extreme right parties.  We operationalize "personality traits and value orientations" using the individual level characteristics from our data set: gender, age, occupation, marital status, and self-placement on a left-right scale. 
 
 ```{r}
-library(separationplot)
-library(Hmisc) 
-
 model_1 <- glm(ext_vote ~ male + age_1 + age_2 + age_4 + edu_1 + edu_2 + farmer_own + worker + retired + unemployed + partner + left_right_scale + country - 1, data = data)
 summary(model_1)
 actual <- model_1$y # Create vector with actual values for vote intention for extreme right parties
 
 log.odds <- model_1$fitted.values # Create a vector with log-odd values
 # Create link function to transform log-odds into predicted probabilities
-link <- function(P) {
-  1/(1+exp(-P))
+link <- function(log.odd) {
+  pred.prob <- 1/(1+exp(-log.odd))
+  pred.prob # returns a numeric vector of predicted probabilities
 } 
-pred <- link(log.odds) # Transform log-odds into predicted probabilities
-pred <- as.vector(pred) 
-range(pred) # variation in the predicted probabilities: very little variation.
-dev.off()
+pred_prob <- link(log.odds) # Transform log-odds into predicted probabilities
+pred_prob <- as.vector(pred_prob) 
+range(pred_prob) # variation in the predicted probabilities: very little variation.
+# Graph variation in Predicted probabilities
+pred_df <- data.frame(pred_prob)
+ggplot(pred_df, aes(x = 1:length(pred_prob), y = pred_prob)) + 
+  geom_line() +
+  xlab("Prediction Number") +
+  ylab("Predicted Probability") +
+  ggtitle("Model 1: Variation in Predicted Probabilities")
 # Create separation plot to visualize the predictive power of the model
-separationplot(pred = pred, actual = actual, type = "rect", heading = "Model1: The Adorno Thesis", xlab = "ER Vote Intention", newplot = F, line = T, lwd2 = 0.8, height = 0.5, show.expected = T) 
+separationplot(pred = pred_prob, actual = actual, type = "rect", heading = "Model1: The Adorno Thesis", xlab = "ER Vote Intention", newplot = F, line = T, lwd2 = 0.8, height = 0.5, show.expected = T) 
 ```
 
 ![Model 1](figures/SP.Model1.png)
@@ -115,30 +118,33 @@ model_2 <- glm(ext_vote ~ eu_neg + z_dem_satis + country - 1, data = data)
 summary(model_2)
 
 actual <- model_2$y # Create vector with actual values for vote intention for extreme right parties
-
 log.odds <- model_2$fitted.values # Create a function with log-odds
-# Create link function to transform log-odds into predicted probabilities
-link <- function(P) {
-  1/(1+exp(-P))
-} 
-pred <- link(log.odds) # Transform log-odds into predicted probabilities
-pred <- as.vector(pred) 
-range(pred) # variation in the predicted probabilities: very little variation.
-dev.off()
+pred_prob <- link(log.odds) # Transform log-odds into predicted probabilities
+pred_prob <- as.vector(pred_prob) 
+range(pred_prob) # variation in the predicted probabilities: very little variation.
+# Visualize variation in predicted probabilities
+pred_df <- data.frame(pred_prob)
+ggplot(pred_df, aes(x = 1:length(pred_prob), y = pred_prob)) + 
+  geom_line() +
+  xlab("Prediction Number") +
+  ylab("Predicted Probability") +
+  ggtitle("Model 2: Variation in Predicted Probabilities")
 # Create separation plot to visualize the predictive power of the model
-separationplot(pred = pred, actual = actual, type = "rect", heading = "Model2: The Parsons Thesis", xlab = "ER Vote Intention", newplot = F, line = T, lwd2 = 0.8, height = 0.5, show.expected = T) 
+separationplot(pred = pred_prob, actual = actual, type = "rect", heading = "Model2: The Parsons Thesis", xlab = "ER Vote Intention", newplot = F, line = T, lwd2 = 0.8, height = 0.5, show.expected = T) 
 ```
 
 ![Model 2](figures/SP.model2.png)
 
 #Conclusion:
-Again, there is little variation in our predictive probabilities with this model. Similar to model 1, most events are aligned with higher predictive probabilities on the right hand of the graph. Yet Model 1 has slightly better predictive power as the very end of the graph is likely to be clustered with event than non-events as in Model 2. 
+Again, there is little variation in our predictive probabilities with this model. Similar to model 1, most events are aligned with higher predictive probabilities on the right hand of the graph. Yet Model 1 has slightly better predictive power as the very end of the graph is likely to be clustered with events rather than non-events as in Model 2. 
 
 ```
 
 # Model 3: Group Conflict Model (Various theories)
 
 Group conflict theories encompass a variety of theories.  Some emphasize the role of instrumental rationality, arguing that xenophobia results from a contest between immigrants and residents over scarce resources like jobs and welfare benefits. Others emphasize the scapegoating of immigrants as perceived threats to residents' status, power or resources.  In this last model, we use relevant variables representing both the availability of resources like jobs and welfare benefits and the prevalence of immigration: unemployment rates, unemployment benefits, number of asylum seekers, saliance and variance of right-wing issues.
+
+We used interactions between contextual variables in this model in line with the author's original model.
 
 ```{r}
 model_3 <- glm(ext_vote ~ z_asylumseeker + z_unemp + z_asylumseeker:z_unemp + z_replacement + z_replacement:z_unemp + z_replacement:z_asylumseeker + country - 1, data = data)
@@ -147,22 +153,24 @@ summary(model_3)
 actual <- model_3$y # Create vector with actual values for vote intention for extreme right parties
 
 log.odds <- model_3$fitted.values # Create a function with log-odds
-# Create link function to transform log-odds into predicted probabilities
-link <- function(P) {
-  1/(1+exp(-P))
-} 
-pred <- link(log.odds) # Transform log-odds into predicted probabilities
-pred <- as.vector(pred) 
-range(pred) # variation in the predicted probabilities: very little variation.
-dev.off()
+pred_prob <- link(log.odds) # Transform log-odds into predicted probabilities
+pred_prob <- as.vector(pred_prob) 
+range(pred_prob) # variation in the predicted probabilities: very little variation.
+# Visualize variation in predicted probabilities
+pred_df <- data.frame(pred_prob)
+ggplot(pred_df, aes(x = 1:length(pred_prob), y = pred_prob)) + 
+  geom_line() +
+  xlab("Prediction No") +
+  ylab("Predicted Probability") +
+  ggtitle("Model 3: Variation in Predicted Probabilities")
 # Create separation plot to visualize the predictive power of the model
-separationplot(pred = pred, actual = actual, type = "rect", heading = "Model3: The Group Conflict Thesis", xlab = "ER Vote Intention", newplot = F, line = T, lwd2 = 0.8, height = 0.5, show.expected = T) 
+separationplot(pred = pred_prob, actual = actual, type = "rect", heading = "Model3: The Group Conflict Thesis", xlab = "ER Vote Intention", newplot = F, line = T, lwd2 = 0.8, height = 0.5, show.expected = T) 
 ```
 
 ![Model 3](figures/SP.model3.png)
 
 #Conclusion:
-The majority of events (intention to vote for ER) are clustered at the end right end of the model - which is in line with a good predictive model. However, in this model the distribution of events is very dispersed compared to other two models.
+The majority of events (the intention to vote for an extreme right party) is clustered at the right end of the model - which is in line with a good predictive model. However, in this model the distribution of events is very dispersed compared to the other two models.
 
 All Three Models
 
