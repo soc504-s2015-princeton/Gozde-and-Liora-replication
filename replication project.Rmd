@@ -1,5 +1,5 @@
 ---
-title: "Gozde and Liora Replication Code"
+title: "Gozde and Liora's Replication Code"
 author: "Gozde Guran and Liora Goldensher"
 date: "3/6/2015"
 output: html_document
@@ -24,42 +24,43 @@ The article uses a multi-level logistic model via Penalized Quasi-Likelihood. Th
 ```{r}
 
 
-library(MASS)
-library(nlme)
-library(xtable)
-library(foreign)
-library(dplyr)
-library(broom)
-library(ggplot2)
-library(xtable)
-library(stargazer)
-library(grid)
-library(gridExtra)
+library(MASS) # includes the glmmPQL function to run model
+library(nlme) # for non-linear mixed effects models
+library(foreign) # allows us to read in data from another format
+library(dplyr) # allows us to manipulate our dataset
+library(broom) # helps tidy data and present in a more usable form
+library(ggplot2) # for graphing
+library(stargazer) # used to create regression tables
+library(grid) # used to combine ggplot graphs
+library(gridExtra) # used to combine ggplot graphs
+library(msm) #includes deltamethod function, which allows us to obtain standard errors of transformed parameters
 
 data <- read.dta("nonimp.dta")
 
 # Cleaning up data
-data <- rename(data, ext_vote = rexvote)
-data <- rename(data, age_1 = age1) # (18–29 years)
-data <- rename(data, age_2 = age2) # (30–45 years)
-data <- rename(data, age_4 = age4) # (>65 years)
-data <- rename(data, edu_1 = mye1) # Education: middle/high
-data <- rename(data, edu_2 = mye2) # Education: university
-data <- rename(data, farmer_own = farmerown) 
-data <- rename(data, left_right_scale = zlrs) # Left-Right Scale
-data <- rename(data, eu_neg = euschlecht) # Negative evaluation of EU membership of one's own country
-data <- rename(data, z_dem_satis = zsatisdmo) # Dissatisfied: Democracy
-data <- rename(data, dispro_elect = disp) # Disproportionality
-data <- rename(data, federalism = lfed1) # Decentralization
-data <- rename(data, z_asylumseeker = zasylumseekers) 
-data <- rename(data, z_unemp = zsur) # Unemployment rate
-data <- rename(data, z_replacement = zreplacementrate) # Unemp benefits
-data <- rename(data, max_er = rmax) # Maximum toughness in extreme right discourse
-
+data <- data %>%
+  rename(ext_vote = rexvote,
+         age_1 = age1, # (18–29 years)
+         age_2 = age2, # (30–45 years)
+         age_4 = age4, # (>65 years)
+         edu_1 = mye1, # Education: middle/high
+         edu_2 = mye2, # Education: university
+         farmer_own = farmerown,
+         left_right_scale = zlrs, # Left-Right Scale
+         eu_neg = euschlecht, # Negative evaluation of EU membership of one's own country
+         z_dem_satis = zsatisdmo, # Dissatisfied: Democracy
+         dispro_elect = disp, # Disproportionality
+         federalism = lfed1, # Decentralization
+         z_asylumseeker = zasylumseekers,
+         z_unemp = zsur, # Unemployment rate
+         z_replacement = zreplacementrate, # Unemp benefits
+         max_er = rmax) # Maximum toughness in extreme right discourse
 ```
 
 
 # Preparing data for analysis
+Lines 64-83 of this code are based on (though not identical to) the code written by Harvard students in their previous replication of this paper. Citation : Noam Gidron; Jeffrey Javed, 2011, "Replication data for: The Unholy Trinity: Immigration, Unemployment and Extremism in Europe, 1980-2002", http://hdl.handle.net/1902.1/15902 V1
+
 
 ```{r}
 # Create centered variables for Saliance and Variance based on grand mean centering according to author
@@ -88,15 +89,13 @@ model <- glmmPQL(ext_vote ~ male + age_1 + age_2 + age_4 + edu_1 + edu_2 + farme
 # Table 1
 ![Table 1](figures/table1.png)
 ```{r}
-# Create vectors of coefficients, standard deviations, and variable names
+# Create vectors of coefficients, standard errors, and variable names
 
 coefficient <- as.vector(model$coef$fixed) 
-n <- c(174452, 267)
-stand_dev <- as.vector(sqrt(diag(model$varFix))) 
+standard_error <- as.vector(sqrt(diag(model$varFix))) 
 
 # Create matrix of coefficients and standard deviations.
-
-table_matrix <- cbind(coefficient, stand_dev)
+table_matrix <- cbind(coefficient, standard_error)
 
 # Label matrix.
 
@@ -104,18 +103,26 @@ rownames(table_matrix) <- c("Male","18_29 years","30_45 years",">65 years","Educ
 
 # Create Table 1 with stargaze
 
-table_1 <- stargazer(table_matrix, title = "TABLE 1 Support for the Extreme Right: Sociodemographics, Attitudes, Country Effects, and Contextual Variables", align = TRUE, table.layout = "t", notes = "Logistic multilevel model. PQL2 estimates and model-based standard errors.", style = "ajps", out = "Table 1.html", no.space = TRUE)
-
+stargazer(table_matrix, title = "TABLE 1 Support for the Extreme Right: Sociodemographics, Attitudes, Country Effects, and Contextual Variables", align = TRUE, table.layout = "t", type = "text", notes = "Logistic multilevel model. PQL2 estimates and model-based standard errors.", style = "ajps", out = "Table 1.html", no.space = TRUE)
 ```
 
 # Figure 1 (Conditonal Effects of Unemployment and Immigration)
 ![Figure 1](figures/fig1.png)
 ```{r}
-library(msm)
+#Function with which we will create each graph
+graph <- function(data, ratio, ymin, ymax) {
+  ggplot(data, aes(x = variable, y = slopes)) + 
+  geom_line(aes(y = slopes), color = "blue") + #color will always be blue
+  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2) + 
+  geom_hline(yintercept = 0, size = 0.4, color = "black") + #fixed y intercept and color
+  labs(x = xtitle, y = ytitle, title = main) + #titles will call from prepared data
+  coord_fixed(ratio)
+}
+#Preparing the data for the first graph
 asy <- seq(from = min(data$z_asylumseeker), to = max(data$z_asylumseeker), by = .01) # vector with possible values for asylumseekers
-
 variable <- asy # identifying "asy" as the variable of interest so that the remaining code can be reused in the next graph with a different variable of interest specified
-slopes <- model$coef$fixed["z_unemp"] + model$coef$fixed["z_asylumseeker:z_unemp"] * asy # Estimated slopes based on estimated coefficients of unemployment (17) and unemployment x immigration (36)
+slopes <- model$coef$fixed["z_unemp"] + 
+  model$coef$fixed["z_asylumseeker:z_unemp"] * asy # Estimated slopes based on estimated coefficients of unemployment (17) and unemployment x immigration (36)
 estmean <- model$coef$fixed # Estimated means for each variable 
 estvar <- vcov(model) # Estimated covariances
 se <- rep(NA, length(variable)) # Creating empty vector for predicted s.e. values
@@ -129,22 +136,16 @@ for (i in 1:length(variable)) {
 upper <- slopes + 1.96 * se
 lower <- slopes - 1.96 * se
 variable.data <- cbind(variable, slopes, upper, lower)
-
-# Creating the first graph with ggplot
-
 variable.data <- data.frame(variable.data) # Turn matrix into data frame so that ggplot can read it.
 xtitle <- "Asylumseekers"
 ytitle <- "Effect: Unemployment"
 main <- "Figure 1: The Conditional Effects of Unemployment and Immigration"
-graph_1 <- ggplot(variable.data, aes(x = variable, y = slopes)) + 
-  geom_line(aes(y = slopes), color = "blue") + 
-  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2) + 
-  geom_hline(yintercept = 0, size = 0.4, color = "black") +
-  labs(x = xtitle, y = ytitle, title = main) +
-  coord_fixed(ratio = 8)
 
-#Figure 1, graph 2
+#creating the first graph using our ggplot function
+graph_1 <- graph(data = variable.data, ratio = 8)
+graph_1
 
+#Preparing the data for the second graph
 unemployment <- seq(from = min(data$z_unemp), to = max(data$z_unemp), by = .01) # vector with possible values for unemployment
 variable <- unemployment # standardized label
 slopes <- model$coef$fixed["z_asylumseeker"] + model$coef$fixed["z_asylumseeker:z_unemp"] * variable # Estimated slopes based on estimated coefficients of asylumseekers (16) and unemployment x immigration (36)
@@ -160,28 +161,20 @@ for (i in 1:length(variable)) {
 upper <- slopes + 1.96 * se
 lower <- slopes - 1.96 * se
 variable.data <- cbind(variable, slopes, upper, lower)
-
-# Creating the second graph with ggplot:
-
 variable.data <- data.frame(variable.data) # Turn matrix into data frame so that ggplot can read it.
 xtitle <- "Unemployment"
 ytitle <- "Effect: Asylum seekers"
 main <- "The Conditional Effects of Unemployment and Immigration"
-graph_2 <- ggplot(variable.data, aes(x = variable, y = slopes)) + 
-  geom_line(aes(y = slopes), color = "blue") + 
-  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2) + 
-  geom_hline(yintercept = 0, size = 0.4, color = "black") +
-  labs(x = xtitle, y = ytitle) +
-  coord_fixed(ratio = 12)
+#Creating the second graph with our function
+graph_2 <- graph(data = variable.data, ratio = 12)
+graph_2
 
 # Figure 1 with ggplot
-
 grid.arrange(graph_1, graph_2, ncol = 1)
 
 # Plot separately - better scaled
 graph_1
 graph_2
-
 ```
 
 # Figure 2 (Conditonal Effects of Salience and Variance)
@@ -189,8 +182,8 @@ graph_2
 
 ```{r}
 # Figure 2, graph 1
-# Create vector with possible values for salience
-salience <- seq(from = min(data$salience_mean_c), to = max(data$salience_mean_c), by = .1) 
+#Preparning the data to graph
+salience <- seq(from = min(data$salience_mean_c), to = max(data$salience_mean_c), by=.1) # vector with possible values for salience
 variable <- salience
 slopes <- model$coef$fixed["var_c"] + model$coef$fixed["salience_mean_c:var_c"] * variable # Estimated slopes based on estimated coefficients of salience (21) and salience x variance (39)
 estmean <- model$coef$fixed # Estimated means for variables 
@@ -205,22 +198,17 @@ for (i in 1:length(variable)) {
 upper <- slopes + 1.96*se
 lower <- slopes - 1.96*se
 variable.data <- cbind(variable, slopes, upper, lower)
-
-# Creating the first graph with ggplot:
-
 variable.data <- data.frame(variable.data) # Turn matrix into data frame so that ggplot can read it.
 xtitle <- "Salience"
 ytitle <- "Effect: Variance"
 main <- "The Conditional Effects of Salience and Variance"
-graph_3 <- ggplot(variable.data, aes(x = variable, y = slopes)) + 
-  geom_line(aes(y = slopes), color = "blue") + 
-  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2) + 
-  geom_hline(yintercept = 0, size = 0.4, color = "black") +
-  labs(x = xtitle, y = ytitle, title = main) +
-  coord_fixed(ratio = 400)
+
+#Creating the first graph with our function
+graph_3 <- graph(data = variable.data, ratio = 400)
+graph_3
 
 # Second part of Figure 2:
-
+#Preparing the data to graph
 variance <- seq(from = min(data$var_c), to = max(data$var_c), by=10) # vector with possible values for variance
 variable <- variance
 slopes <- model$coef$fixed["salience_mean_c"] + model$coef$fixed["salience_mean_c:var_c"] * variable # Estimated slopes based on estimated coefficients of salience (20) and salience x variance (39)
@@ -237,19 +225,14 @@ for (i in 1:length(variable)) {
 upper <- slopes + 1.96 * se
 lower <- slopes - 1.96 * se
 variable.data <- cbind(variable, slopes, upper, lower)
-
-# Creating the second graph with ggplot:
-
 variable.data <- data.frame(variable.data) # Turn matrix into data frame so that ggplot can read it.
 xtitle <- "Variance"
 ytitle <- "Effect: Salience"
 main <- "The Conditional Effects of Salience and Variance"
-graph_4 <- ggplot(variable.data, aes(x = variable, y = slopes)) + 
-  geom_line(aes(y = slopes), color = "blue") + 
-  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2) + 
-  geom_hline(yintercept = 0, size = 0.4, color = "black") +
-  labs(x = xtitle, y = ytitle, title = main) +
-  coord_fixed(ratio = 500)
+
+#Creating the second graph with our function
+graph_4 <- graph(data = variable.data, ratio = 500)
+graph_4
 
 grid.arrange(graph_3, graph_4, ncol = 1)
 # Better scaled versions - not combined
