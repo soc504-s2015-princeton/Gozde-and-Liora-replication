@@ -105,13 +105,11 @@ separationplot(pred = pred_prob, actual = actual, type = "rect", heading = "Mode
 
 #Conclusion
 There isn't a big range in the predicted probabilities of the model, therefore the predicted probabilities are not very helpful. Separation plot helps a lot to discern the predictive power of the model. As the events of extreme right vote intension increases as we move to the right (i.e. red lines cluster around the end of the graph), the model does a good job of estimating the likelihood of events. However, as the small arrow in the graph shows, the model predicts that half the number of observations will have the intention to vote for an extreme right party. The number of actual events (red lines) is much lower.  
-
 ```
 
 # Model 2: Parsons Thesis (Social Disintegration)
 
 Parsons' 1942 theory of social disintegration posits that anomia, a breakdown of social norms, and attendant feelings of anxiety, anger and isolation brings about a longing for strong leadership and rigid ideologies that extreme right parties can provide.  While we do not have measures for the emotions of participants in the studies whose data we use, in our second model we examine the relationship between extreme right voting and the kinds of sentiments about social change that Parsons refers to: satisfaction with democracy and the negative evaluation of the European Union.
-
 
 ```{r}
 model_2 <- glm(ext_vote ~ eu_neg + z_dem_satis + country - 1, data = data)
@@ -137,8 +135,6 @@ separationplot(pred = pred_prob, actual = actual, type = "rect", heading = "Mode
 
 #Conclusion:
 Again, there is little variation in our predictive probabilities with this model. Similar to model 1, most events are aligned with higher predictive probabilities on the right hand of the graph. Yet Model 1 has slightly better predictive power as the very end of the graph is likely to be clustered with events rather than non-events as in Model 2. 
-
-```
 
 # Model 3: Group Conflict Model (Various theories)
 
@@ -180,4 +176,6 @@ All Three Models
 
 ![Model 3](figures/SP.model3.png)
 
-Although there is very little difference in the separation plots for all three models, our conclusion is that model 1 (the Adorno thesis which emphasizes individual-level characteristics and personal attitudes) has the most predictive power given the level of concentration of events in the upper probabilities area in the plot. 
+Although there is very little difference in the separation plots for all three models, our conclusion is that model 1 (the Adorno thesis which emphasizes individual-level characteristics and personal attitudes) has the most predictive power given the level of concentration of events in the upper probabilities area in the plot.
+
+This extension breaks Arzheimer's multi-level model into three different models that correspond to the three theoretical explanations for political orientation towards extreme right parties and movements. While we were interested in visualizing the predictive power of each theory, we acknowledge that the original model's multi-level structure (individuals nested into election contexts in various countries) is a better way to analyze ER vote intension. That said, we think treating each country as another level that the election contexts are nested in (rather than taking countries as dummy variables) would have provided an even more compelling multi-level model.    
