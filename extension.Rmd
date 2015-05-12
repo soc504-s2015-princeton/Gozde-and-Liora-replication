@@ -220,7 +220,7 @@ binnedplot(predict(model_3), resid(model_3), cex.pts=1, col.int="black")
 
 #data_model3 <- data.frame(max_z_asylumseekers, max_z_unemp, max_z_asylumseeker_z_unemp, max_z_replacement, max_z_replacement_z_unemp, max_z_replacement_z_asylumseeker, country = "AT")
 #predict(model_3, data_model3, type = "response")
-#We have thus far been unable to debug the above code such that we could generate a prediction.  However, we do have a binned residual plot for this model
+#We have thus far been unable to debug the above code such that we could generate a prediction.  However, we do have a binned residual plot for this model.  
 ```
 
 The binned residual plots show the highest level of randomness for the second and third models, Parsons' and the group conflict theories.  This method would indicate that, contrary to our conclusions from the separation plots (see below), these models have the closest fit to the observed data.  However, all of these conclusions must be qualified:  the proxy variables available to us in this data set do not perfectly operationalize the theoretical models in question.
