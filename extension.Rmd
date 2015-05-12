@@ -47,7 +47,7 @@ data <- data %>%
          z_dem_satis = zsatisdmo, # Dissatisfied: Democracy
          dispro_elect = disp, # Disproportionality
          federalism = lfed1, # Decentralization
-         z_asylumseeker = zasylumseekers,
+         z_asylumseeker = zasylumseekers ,
          z_unemp = zsur, # Unemployment rate
          z_replacement = zreplacementrate, # Unemp benefits
          max_er = rmax) # Maximum toughness in extreme right discourse
@@ -74,7 +74,7 @@ data <- data %>%
 
 
 # Model 1: Adorno Thesis (Individual Characteristics and Value Orientations)
-The first model is based on Theodor Adorno's 1950 theory that support for extreme right parties (in his case, fascist parties) originates from supporters' personality traits and value orientations, which make individuals more receptive to the appeals of extreme right parties.  We operationalize "personality traits and value orientations" using the individual level characteristics from our data set: gender, age, occupation, marital status, and self-placement on a left-right scale. 
+The first model is based on Theodor Adorno's 1950 theory that support for extreme right parties (in his case, fascist parties) originates from supporters' personality traits and value orientations, which make individuals more receptive to the appeals of extreme right parties.  We operationalize "personality traits and value orientations" using the individual level characteristics from our data set: gender, age, occupation, marital status, and self-placement on a left-right scale. These variables are rather poor proxies for "personality traits and value orientations", but provide the closest approximation from our dataset.
 
 ```{r}
 model_1 <- glm(ext_vote ~ male + age_1 + age_2 + age_4 + edu_1 + edu_2 + farmer_own + worker + retired + unemployed + partner + left_right_scale + country - 1, data = data)
@@ -168,7 +168,64 @@ separationplot(pred = pred_prob, actual = actual, type = "rect", heading = "Mode
 #Conclusion:
 The majority of events (the intention to vote for an extreme right party) is clustered at the right end of the model - which is in line with a good predictive model. However, in this model the distribution of events is very dispersed compared to the other two models.
 
-All Three Models
+# Diagnostics on our three models #
+The unit of analysis in each model is the individual. We wanted to apply a number of diagnostics to further test the predictive power of each model.
+
+For model 1, we first plot fitted values vs. residuals. Since we have a categorical outcome, binned residual plots are more informative than regular plots for fitted values vs. residuals. Here we benefited greatly from this Stackexchange post: http://stats.stackexchange.com/questions/63566/unexpected-residuals-plot-of-mixed-linear-model-using-lmer-lme4-package-in-r. Then, we extract the predicted probability for an example case: a young unemployed single male who self-identifies as right-wing in Austria. 
+
+```{r}
+plot(fitted(model_1), residuals(model_1),
+  xlab = "Fitted Values", ylab = "Residuals")
+  abline(h=0, lty=2) # Not very useful since the outcome is a catogorical variable and is not distributed normally.
+
+library(arm) # To create binned plots for logistic models
+binnedplot(predict(model_1), resid(model_1), cex.pts=1, col.int="black")
+
+data_model1 <- data.frame(male = 1, age_1 = 1, age_2 = 0, age_4 = 0, edu_1 = 1, edu_2 = 0, farmer_own = 0, worker = 0, retired = 0, unemployed = 1, partner = 0, left_right_scale = max(data$left_right_scale, na.rm = T), country = "AT")
+
+predict(model_1, data_model1, type = "response")
+```
+
+For model 2, we again plot residuals vs. fitted values. This time the predictions are clustered on the left side. We then extract the predicted probability for an individual who disapproves of EU and is not satisfied with democracy.
+
+```{r}
+
+plot(fitted(model_2), residuals(model_2),
+  xlab = "Fitted Values", ylab = "Residuals")
+  abline(h=0, lty=2)
+
+binnedplot(predict(model_2), resid(model_2), cex.pts=1, col.int="black")
+
+data_model2 <- data.frame(eu_neg = max(data$eu_neg, na.rm = T), z_dem_satis = max(data$z_dem_satis, na.rm = T), country = "AT") 
+
+predict(model_2, data_model2, type = "response")
+```
+
+
+For model 3, after plotting fitted values vs. residuals, we look for predicted probability for an individual whose context of unemployment rates, unemployment benefits, number of asylum seekers, and salience and variance of right-wing issues is Austria's most extreme--most likely to vote for an extreme right party, according to the theory.
+
+```{r}
+plot(fitted(model_3), residuals(model_3),
+  xlab = "Fitted Values", ylab = "Residuals")
+  abline(h=0, lty=2)
+
+binnedplot(predict(model_3), resid(model_3), cex.pts=1, col.int="black")
+
+#max_z_asylumseekers <- max(data$z_asylumseeker, na.rm = T) #4.45935
+#max_z_unemp <- max(data$z_unemp, na.rm = T) #12.2919
+#max_z_asylumseeker_z_unemp <- max(data$z_asylumseeker:data$z_unemp, na.rm = T) #-0.2445196
+#max_z_replacement <- max(data$z_replacement, na.rm = T) #32.96374
+#max_z_replacement_z_unemp <- max(data$z_replacement:data$z_unemp, na.rm = T) #0.5738534
+#max_z_replacement_z_asylumseeker <- max(data$z_replacement:data$z_asylumseeker, na.rm = T) #0.5738534
+
+#data_model3 <- data.frame(max_z_asylumseekers, max_z_unemp, max_z_asylumseeker_z_unemp, max_z_replacement, max_z_replacement_z_unemp, max_z_replacement_z_asylumseeker, country = "AT")
+#predict(model_3, data_model3, type = "response")
+#We have thus far been unable to debug the above code such that we could generate a prediction.  However, we do have a binned residual plot for this model
+```
+
+The binned residual plots show the highest level of randomness for the second and third models, Parsons' and the group conflict theories.  This method would indicate that, contrary to our conclusions from the separation plots (see below), these models have the closest fit to the observed data.  However, all of these conclusions must be qualified:  the proxy variables available to us in this data set do not perfectly operationalize the theoretical models in question.
+
+Conclusion: All Three Models
 
 ![Model 1](figures/SP.Model1.png)
 
@@ -176,6 +233,9 @@ All Three Models
 
 ![Model 3](figures/SP.model3.png)
 
+
 Although there is very little difference in the separation plots for all three models, our conclusion is that model 1 (the Adorno thesis which emphasizes individual-level characteristics and personal attitudes) has the most predictive power given the level of concentration of events in the upper probabilities area in the plot.
 
 This extension breaks Arzheimer's multi-level model into three different models that correspond to the three theoretical explanations for political orientation towards extreme right parties and movements. While we were interested in visualizing the predictive power of each theory, we acknowledge that the original model's multi-level structure (individuals nested into election contexts in various countries) is a better way to analyze ER vote intension. That said, we think treating each country as another level that the election contexts are nested in (rather than taking countries as dummy variables) would have provided an even more compelling multi-level model.    
+
+
