@@ -21,3 +21,6 @@ Extension Edits:
 3) Per Andres's comment (line 144) about the use of interactions in model 3, we added furher documentation. Here we decided to use interactions between contextual variables following the author's original model. 
 4) Following Matt's question about the multi-level model, we added a note on this point. While we were interested in visualizing the predictive power of all three theories in our extension, we acknowledge that the original model's multi-level structure (individuals nested into election contexts in various countries) is a better way to analyze extreme-right vote intention for each individual.
 
+5) In response to Matt's suggestion, we attempted (with varying levels of success) other diagnostics on our three models.  We created binned residuals plots and also attempted to compare predicted probabilities for extreme cases.
+
+Attempting these edits has improved both our code and our thinking about the theoretical and empirical puzzles in this paper.  Again, many thanks to all the reviewers for their comments and suggestions.  
