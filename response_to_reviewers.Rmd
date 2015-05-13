@@ -1,0 +1,26 @@
+---
+title: "response_to_reviewers"
+author: "Gozde and Liora"
+date: "5/12/2015"
+output: html_document
+---
+
+We thank all four reviewers for providing excellent feedback on our replication and extension code. Most of their suggestions were related to improving our code, which we adopted whenever possible. Our reviewers also commented on the theoretical and modelling decisions in our code, and we tried to address these points below. 
+
+Replication Edits:
+
+1) Following Aaron and Andres's recommendation, we used pipes in our data cleaning code, specifically in the code to rename a number of variables in the data frame (lines 41-58). Since we didn't change all 83 variable names, the "rename" function rather than dplyr's "select" command  was more practical. This change made our code much more simple to edit and easier to follow through. 
+2) As per Aaron and Andres's suggestion, we added documentation on the packages we are using in our replication. 
+3) We agree with Angela and Matt's comments on the hard-coded numbers for centered variables (lines 67-69): We acknowledge that this is not good coding practice; however, due to our difficulty in reading the author's original code in Stata, we were unable to reproduce these numbers via our own code in R. Our efforts to find how the author calculated grand-mean centering for these two variables could not yield these results so we used the hard-coded numbers.
+4) Per Matt and Angela's suggestions, we have created a function to plot all four of the graphs.  In addition to making the code somewhat more concise, this makes our code more self-documenting in that it highlights the similar structures of these graphs.
+
+Extension Edits:
+
+1) We improved our logit link function in line with Matt's comment (line 93): we gave better names for arguments and outputs; we removed redundant code which created the link function for each model. 
+2) Following Matt's suggestion (line 95), we graphed the range in predicted probabilities to better present the very little variation in predictions for all three models. The differences between the graphs for each model also made us realize the connection between plotted probabilities and the separation plots. 
+3) Per Andres's comment (line 144) about the use of interactions in model 3, we added furher documentation. Here we decided to use interactions between contextual variables following the author's original model. 
+4) Following Matt's question about the multi-level model, we added a note on this point. While we were interested in visualizing the predictive power of all three theories in our extension, we acknowledge that the original model's multi-level structure (individuals nested into election contexts in various countries) is a better way to analyze extreme-right vote intention for each individual.
+
+5) In response to Matt's suggestion, we attempted (with varying levels of success) other diagnostics on our three models.  We created binned residuals plots and also attempted to compare predicted probabilities for extreme cases.
+
+Attempting these edits has improved both our code and our thinking about the theoretical and empirical puzzles in this paper.  Again, many thanks to all the reviewers for their comments and suggestions.  
